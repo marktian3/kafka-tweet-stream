@@ -8,19 +8,22 @@ import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class TwitterProducer {
 
-    public TwitterProducer(){}
+    TwitterSecrets twitterSecrets = new TwitterSecrets();
 
-    public static void main(String[] args) {
+    public TwitterProducer() throws IOException {}
+
+    public static void main(String[] args) throws IOException {
         new TwitterProducer().run();
     }
 
-    public void run(){
+    public void run() throws IOException {
         System.out.println("Hello world");
         //Twitter Client
 
@@ -28,6 +31,7 @@ public class TwitterProducer {
 
         //Send tweets to Kafka
     }
+
 
     public void createTwitterClient(){
         /** Set up your blocking queues: Be sure to size these properly based on expected TPS of your stream */
@@ -44,6 +48,6 @@ public class TwitterProducer {
         //hosebirdEndpoint.followings(followings);
         hosebirdEndpoint.trackTerms(terms);
 
-        Authentication hosebirdAuth = new OAuth1("consumerKey", "consumerSecret", "token", "secret");
+        Authentication hosebirdAuth = new OAuth1(twitterSecrets.consumerKey, twitterSecrets.consumerSecret, twitterSecrets.token, twitterSecrets.secret);
     }
 }
