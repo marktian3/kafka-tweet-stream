@@ -2,3 +2,6 @@
 /shelf/
 /workspace.xml
 src/main/resources/properties.xml
+target/classes/properties.xml
+
+

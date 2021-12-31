@@ -13,9 +13,9 @@ public class TwitterSecrets {
     public TwitterSecrets() throws IOException {
         Properties properties = new Properties();
         properties.loadFromXML(getClass().getResourceAsStream("/properties.xml"));
-        this.consumerKey = properties.getProperty(consumerKey);
-        this.consumerSecret = properties.getProperty(consumerSecret);
-        this.token = properties.getProperty(token);
-        this.secret = properties.getProperty(secret);
+        this.consumerKey = properties.getProperty("consumerKey");
+        this.consumerSecret = properties.getProperty("consumerSecret");
+        this.token = properties.getProperty("token");
+        this.secret = properties.getProperty("secret");
     }
 }
