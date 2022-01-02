@@ -10,11 +10,15 @@ import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class TwitterProducer {
 
     Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
-    TwitterSecrets twitterSecrets = new TwitterSecrets();
+    PersonalProperties personalProperties = new PersonalProperties();
 
     public TwitterProducer() throws IOException {}
 
@@ -41,6 +45,7 @@ public class TwitterProducer {
         client.connect();
 
         //Kafka Producer
+        KafkaProducer<String, String> producer = createKafkaProducer();
 
         //Send tweets to Kafka
 
@@ -75,7 +80,7 @@ public class TwitterProducer {
         //hosebirdEndpoint.followings(followings);
         hosebirdEndpoint.trackTerms(terms);
 
-        Authentication hosebirdAuth = new OAuth1(twitterSecrets.consumerKey, twitterSecrets.consumerSecret, twitterSecrets.token, twitterSecrets.secret);
+        Authentication hosebirdAuth = new OAuth1(personalProperties.consumerKey, personalProperties.consumerSecret, personalProperties.token, personalProperties.secret);
 
         ClientBuilder builder = new ClientBuilder()
                 .name("Hosebird-Client-01")                              // optional: mainly for the logs
@@ -86,5 +91,19 @@ public class TwitterProducer {
 
         Client hosebirdClient = builder.build();
         return hosebirdClient;
+    }
+
+    public KafkaProducer<String, String> createKafkaProducer(){
+        String bootstrapServers = personalProperties.bootstrap_server_ip;
+
+        //create Producer properties
+        Properties properties = new Properties();
+        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        //create the producer, key and value both strings
+        KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
+        return producer;
     }
 }

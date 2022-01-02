@@ -1,6 +1,6 @@
 # Default ignored files
 /shelf/
-/workspace.xml
+/.idea/workspace.xml
 src/main/resources/properties.xml
 target/classes/properties.xml
 
