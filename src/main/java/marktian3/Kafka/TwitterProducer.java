@@ -10,8 +10,7 @@ import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +60,15 @@ public class TwitterProducer {
 
             if(msg != null){
                 logger.info(msg);
+                //Producer cannot produce to topics that don't exist, so pre-create topic in kafka
+                producer.send(new ProducerRecord<>("tweets", null, msg), new Callback() {
+                    @Override
+                    public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                        if(e != null){
+                            logger.error("Error: ", e);
+                        }
+                    }
+                });
             }
         }
         logger.info("End of application");
@@ -96,7 +104,6 @@ public class TwitterProducer {
     public KafkaProducer<String, String> createKafkaProducer(){
         String bootstrapServers = personalProperties.bootstrap_server_ip;
 
-        //create Producer properties
         Properties properties = new Properties();
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
