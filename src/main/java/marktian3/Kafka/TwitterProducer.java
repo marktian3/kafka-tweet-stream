@@ -61,7 +61,7 @@ public class TwitterProducer {
             if(msg != null){
                 logger.info(msg);
                 //Producer cannot produce to topics that don't exist, so pre-create topic in kafka
-                producer.send(new ProducerRecord<>("tweets", null, msg), new Callback() {
+                producer.send(new ProducerRecord<>("tweets_topic_01", null, msg), new Callback() {
                     @Override
                     public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                         if(e != null){
