@@ -27,6 +27,9 @@ public class TwitterProducer {
     Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
     PersonalProperties personalProperties = new PersonalProperties();
 
+    //List<String> terms = Lists.newArrayList("bitcoin");
+    List<String> terms;
+
     public TwitterProducer() throws IOException {}
 
     public static void main(String[] args) throws IOException {
@@ -37,6 +40,10 @@ public class TwitterProducer {
 
         logger.info("Initializing application");
 
+        System.out.println("Please enter terms to subscribe to: ");
+        this.terms = UserInput.readUserTerms();
+        logger.info("Subscribing to following terms: " + terms);
+
         //Twitter Client
         /** Set up your blocking queues: Be sure to size these properly based on expected TPS of your stream */
         BlockingQueue<String> msgQueue = new LinkedBlockingQueue<String>(1000);
@@ -46,8 +53,10 @@ public class TwitterProducer {
         //Kafka Producer
         KafkaProducer<String, String> producer = createKafkaProducer();
 
-        //Send tweets to Kafka
+        //Shutdown hook
+        addShutDownHook(client, producer);
 
+        //Send tweets to Kafka
         // on a different thread, or multiple different threads....
         while (!client.isDone()) {
             String msg = null;
@@ -60,19 +69,17 @@ public class TwitterProducer {
 
             if(msg != null){
                 logger.info(msg);
-                //Producer cannot produce to topics that don't exist, so pre-create topic in kafka
-                producer.send(new ProducerRecord<>("tweets_topic_01", null, msg), new Callback() {
-                    @Override
-                    public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-                        if(e != null){
-                            logger.error("Error: ", e);
-                        }
+                //Pre-create topic in kafka as producer cannot produce to topics that don't yet exist
+                producer.send(new ProducerRecord<>("tweets_topic_01", null, msg), (recordMetadata, e) -> {
+                    if(e != null){
+                        logger.error("Error: ", e);
                     }
                 });
             }
         }
         logger.info("End of application");
     }
+
 
 
     public Client createTwitterClient(BlockingQueue<String> msgQueue){
@@ -84,7 +91,6 @@ public class TwitterProducer {
         // Optional: set up some followings and track terms
         //List<Long> followings = Lists.newArrayList(1234L, 566788L);
         //List<String> terms = Lists.newArrayList("twitter", "api");
-        List<String> terms = Lists.newArrayList("bitcoin");
         //hosebirdEndpoint.followings(followings);
         hosebirdEndpoint.trackTerms(terms);
 
@@ -109,8 +115,19 @@ public class TwitterProducer {
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
-        //create the producer, key and value both strings
+        //create the producer, key and value are both strings
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
         return producer;
+    }
+
+    private void addShutDownHook(Client client, KafkaProducer<String, String> producer) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Stopping Application...");
+            logger.info("Shutting down twitter client...");
+            client.stop();
+            logger.info("Closing Kafka producer...");
+            producer.close();
+            logger.info("Application stopped successfully");
+        }));
     }
 }
