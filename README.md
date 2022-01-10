@@ -1,8 +1,13 @@
 # kafka-tweet-stream
 
-Proof of concept using Kafka to obtain a real-time data feed from Twitter 
+Proof of concept using Kafka to obtain a real-time data feed from Twitter. User can input terms to subscribe to and application will produce tweets to kafka. 
 
-Usage:
+### Use Cases: 
+- sentiment analysis 
+- real time event monitoring
+- stalking (not endorsed) 
+
+### Usage:
 Obtain secrets from Twitter developer and place in /src/main/resources/properties.xml 
 
 Starting Kafka 

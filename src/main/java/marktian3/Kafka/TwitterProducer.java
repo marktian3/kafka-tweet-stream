@@ -81,7 +81,6 @@ public class TwitterProducer {
     }
 
 
-
     public Client createTwitterClient(BlockingQueue<String> msgQueue){
 
         /** Declare the host you want to connect to, the endpoint, and authentication (basic auth or oauth) */
@@ -130,4 +129,5 @@ public class TwitterProducer {
             logger.info("Application stopped successfully");
         }));
     }
+
 }
